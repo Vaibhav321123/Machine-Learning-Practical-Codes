@@ -1,0 +1,71 @@
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sns
+
+pwd
+
+df = pd.read_csv('../input/heartcsv/Heart.csv')
+
+df.head()
+
+
+df.shape #303, 15
+
+
+df.isnull().sum()   #missing values
+
+df.count()
+
+
+df.info()
+
+
+df.dtypes
+
+df==0         #Finding out Zero's
+
+
+df[df==0]
+
+(df == 0).sum()
+
+np.mean(df['Age'])
+
+df.Age.mean()
+
+df.columns
+
+data = df[['Age', 'Sex', 'ChestPain', 'RestBP', 'Chol']]
+
+train,test = train_test_split(data,test_size=0.25,random_state=1)
+train.shape
+
+test.shape
+
+
+
+actual = np.concatenate((np.ones(45),np.zeros(450),np.ones(5)))
+actual
+
+
+predicted = np.concatenate((np.ones(100),np.zeros(400)))
+predicted
+
+type(predicted)
+
+#  Confusion Matrix
+
+from sklearn.metrics import ConfusionMatrixDisplay
+ConfusionMatrixDisplay.from_predictions(actual,predicted)
+
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+
+print(classification_report(actual,predicted))
+         
+
+accuracy_score(actual,predicted)
+
