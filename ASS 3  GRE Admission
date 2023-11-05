@@ -1,0 +1,96 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('../input/graduate-admissions/Admission_Predict_Ver1.1.csv')
+
+df.head()
+
+df.shape
+
+
+df = df.drop('Serial No.',axis=1)
+
+df.shape
+
+from sklearn.preprocessing import Binarizer
+bi = Binarizer(threshold=0.75)
+df["Chance of Admit "] = bi.fit_transform(df[['Chance of Admit ']])
+
+df.head()
+
+df.columns
+
+x = df[['GRE Score', 'TOEFL Score', 'University Rating', 'SOP', 'LOR ', 'CGPA',
+       'Research']]
+y = df['Chance of Admit ']
+y = y.astype('int') # y float is converted into y
+
+sns.countplot(x=y)
+
+y.value_counts()
+
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.25,random_state=1)
+
+print(f"Size of splitted data")
+print(f"x_train {x_train.shape}")
+print(f"y_train {y_train.shape}")
+print(f"y_train {x_test.shape}")
+print(f"y_test {y_test.shape}")
+
+
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LogisticRegression
+
+
+model_dt = DecisionTreeRegressor(random_state=1)
+model_rf = RandomForestRegressor(random_state=1)
+model_lr = LogisticRegression(random_state=1,solver='lbfgs',max_iter=1000)
+
+
+model_rf.fit(x_train,y_train)
+
+model_lr.fit(x_train,y_train)
+
+y_pred_dt = model_dt.predict(x_test) #int
+y_pred_rf = model_rf.predict(x_test) #float
+y_pred_lr = model_lr.predict(x_test) #
+
+y_pred_rf = y_pred_rf.reshape(1,-1)
+
+y_pred_rf = bi.fit_transform(y_pred_rf)
+y_pred_rf = y_pred_rf.reshape(125)
+
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
+from sklearn.metrics import classification_report
+
+#Decision Tree
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_dt)
+plt.title('Decision Tree')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_dt)}")
+print(classification_report(y_test,y_pred_dt))
+
+
+#Logistic Regression
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_lr)
+plt.title('Logistic Regression')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_lr)}")
+print(classification_report(y_test,y_pred_lr))
+
+#Random Forest
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_rf)
+plt.title('Random Forest')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_rf)}")
+print(classification_report(y_test,y_pred_rf))
+ 
+
