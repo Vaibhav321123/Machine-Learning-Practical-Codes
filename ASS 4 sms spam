@@ -1,0 +1,157 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All"
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv('../input/sms-spam-collection-data-set/SMSSpamCollection',sep='\t',names=['label','text'])
+
+df
+
+#Data Pre-processing
+
+df.shape
+
+import nltk #!pip install nltk
+
+sent = 'How are you friends?'
+
+from nltk.tokenize import word_tokenize
+word_tokenize(sent)
+
+
+from nltk.corpus import stopwords
+swords = stopwords.words('english')
+
+clean = [word for word in word_tokenize(sent) if word not in swords]
+
+clean
+
+# Stemming words with NLTK
+from nltk.stem import PorterStemmer
+ps = PorterStemmer()
+clean = [ps.stem(word) for word in word_tokenize(sent)
+         if word not in swords]
+clean
+
+
+sent = 'Hello friends! How are you? We will learning python today'
+
+def clean_text(sent):
+    tokens = word_tokenize(sent)
+    clean = [word for word in tokens if word.isdigit() or word.isalpha()]
+    clean = [ps.stem(word) for word in clean
+         if word not in swords]
+    return clean
+    
+clean_text(sent)
+
+# Pre-processing
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+tfidf = TfidfVectorizer(analyzer=clean_text)
+
+x = df['text']
+y = df['label']
+
+x_new = tfidf.fit_transform(x)
+
+x.shape
+
+x_new.shape
+
+# tfidf.get_feature_names()
+import seaborn as sns
+sns.countplot(x=y)
+
+#cross validation
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test = train_test_split(x_new,y,test_size=0.25,random_state=1)
+
+print(f"Size of splitted data")
+print(f"x_train {x_train.shape}")
+print(f"y_train {y_train.shape}")
+print(f"y_test {x_test.shape}")
+print(f"y_test {y_test.shape}")
+
+
+from sklearn.naive_bayes import GaussianNB
+
+nb = GaussianNB()
+nb.fit(x_train.toarray(),y_train)
+y_pred_nb = nb.predict(x_test.toarray())
+
+y_test.value_counts()
+
+
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_nb)
+plt.title('Naive bayes')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_nb)}")
+print(classification_report(y_test,y_pred_nb))
+
+
+from sklearn.ensemble import RandomForestClassifier
+model_rf = RandomForestClassifier(random_state=1)
+model_rf.fit(x_train,y_train)
+
+
+y_pred_rf = model_rf.predict(x_test) #float
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_rf)
+plt.title('Random Forest')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_rf)}")
+print(classification_report(y_test,y_pred_rf))
+
+
+from sklearn.linear_model import LogisticRegression
+model_lr = LogisticRegression(random_state=1)
+
+model_lr.fit(x_train,y_train)
+y_pred_lr = model_lr.predict(x_test)
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_lr)
+plt.title('Logistic regression')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_lr)}")
+print(classification_report(y_test,y_pred_lr))
+
+
+#Hyper parameter tunning
+from sklearn.model_selection import GridSearchCV
+para = {
+
+    'criterion':['gini', 'entropy','log_loss'],
+    'class_weight':['balanced','balanced_subsample']
+}
+
+grid = GridSearchCV(model_rf, param_grid=para, cv=5, scoring='accuracy')
+
+grid.fit(x_train,y_train)
+
+rf = grid.best_estimator_
+
+y_pred_grid = rf.predict(x_test)
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred_grid)
+plt.title('Gride Search')
+plt.show()
+print(f" Accuracy is {accuracy_score(y_test,y_pred_grid)}")
+print(classification_report(y_test,y_pred_grid))
+
